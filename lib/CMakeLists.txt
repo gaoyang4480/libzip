@@ -2,6 +2,9 @@ include(CheckFunctionExists)
 
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
 add_library(zip
   zip_add.c
   zip_add_dir.c

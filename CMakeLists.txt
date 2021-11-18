@@ -205,6 +205,8 @@ if(ENABLE_ZSTD)
   endif(Zstd_FOUND)
 endif(ENABLE_ZSTD)
 
+find_package(Iconv)
+
 if (COMMONCRYPTO_FOUND)
   set(HAVE_CRYPTO 1)
   set(HAVE_COMMONCRYPTO 1)
@@ -434,8 +436,8 @@ configure_package_config_file("${PROJECT_NAME}-config.cmake.in" "${PROJECT_BINAR
 
 if(LIBZIP_DO_INSTALL)
   # Add targets to the build-tree export set
-  export(TARGETS zip
-    FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake")
+#  export(TARGETS zipun
+#    FILE "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake")
 
   # installation
   install(FILES ${PROJECT_BINARY_DIR}/zipconf.h DESTINATION include)

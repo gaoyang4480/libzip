@@ -85,6 +85,25 @@ get_data(void **datap, size_t *sizep, const char *archive) {
 static int
 modify_archive(zip_t *za) {
     /* modify the archive */
+
+
+
+//    zip_source_t *zs = NULL;
+//    zip_int64_t idx = zip_name_locate(za, "test.xml", 0);
+//    if (idx >= 0) {
+//            if (zip_delete(za, idx) == -1) {
+//                    return -1;
+//            }
+//    }
+//    if ((zs = zip_source_buffer(za, "test", 4, 0)) == NULL) {
+//            fprintf(stderr, "Create zip source from buffer error: %s\n", zip_strerror(za));
+//            return -1;
+//    }
+//    if (zip_add(za, "test.xml", zs) < 0) {
+//            fprintf(stderr, "Add source to zip error: %s\n", zip_strerror(za));
+//            zip_source_free(zs);
+//            return -1;
+//    }
     return 0;
 }
 
@@ -126,7 +145,8 @@ main(int argc, char *argv[]) {
     zip_source_t *src;
     zip_t *za;
     zip_error_t error;
-    void *data;
+	void *data1;
+	void *data;
     size_t size;
 
     if (argc < 2) {
@@ -136,15 +156,15 @@ main(int argc, char *argv[]) {
     archive = argv[1];
 
     /* get buffer with zip archive inside */
-    if (get_data(&data, &size, archive) < 0) {
+    if (get_data(&data1, &size, archive) < 0) {
         return 1;
     }
 
     zip_error_init(&error);
     /* create source from buffer */
-    if ((src = zip_source_buffer_create(data, size, 1, &error)) == NULL) {
+    if ((src = zip_source_buffer_create(data1, size, 0, &error)) == NULL) {
         fprintf(stderr, "can't create source: %s\n", zip_error_strerror(&error));
-        free(data);
+        free(data1);
         zip_error_fini(&error);
         return 1;
     }
@@ -207,6 +227,8 @@ main(int argc, char *argv[]) {
 
     /* we're done with src */
     zip_source_free(src);
+
+	//free(data1);
 
     /* use new data */
     use_data(data, size, archive);

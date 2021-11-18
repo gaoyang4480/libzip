@@ -32,6 +32,7 @@
 */
 
 
+#include <iconv.h>
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
@@ -75,6 +76,39 @@ _zip_string_free(zip_string_t *s) {
     free(s);
 }
 
+char *
+code_convert(char *source_charset, char *to_charset, char *sourceStr, int sourceStrLen, int *outputLen) {
+    iconv_t cd = iconv_open(to_charset, source_charset);
+    if (cd == 0) {
+        return NULL;
+    }
+    size_t inlen = sourceStrLen;
+    // FIXME:
+    size_t outlen = 1024;
+    char *inbuf = sourceStr;
+    char *outbuf = (char *)malloc(outlen);
+    memset(outbuf, 0, outlen);
+    char *poutbuf = outbuf;
+    if (iconv(cd, &inbuf, &inlen, &poutbuf, &outlen) == -1) {
+        free(outbuf);
+        return NULL;
+    }
+    if (outputLen) {
+        *outputLen = strlen(outbuf);
+    }
+    iconv_close(cd);
+    return outbuf;
+}
+
+char *
+gbkToUtf8(char *strGbk, int strGbkLen, int *outputLen) {
+    return code_convert("gb2312", "utf-8", strGbk, strGbkLen, outputLen);
+}
+
+char *
+gb18030ToGbk(char *strGb18030, int strGb18030Len, int *outputLen) {
+    return code_convert("GB18030", "GBK", strGb18030, strGb18030Len, outputLen);
+}
 
 const zip_uint8_t *
 _zip_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip_error_t *error) {
@@ -93,8 +127,20 @@ _zip_string_get(zip_string_t *string, zip_uint32_t *lenp, zip_flags_t flags, zip
 
         if (((flags & ZIP_FL_ENC_STRICT) && string->encoding != ZIP_ENCODING_ASCII && string->encoding != ZIP_ENCODING_UTF8_KNOWN) || (string->encoding == ZIP_ENCODING_CP437)) {
             if (string->converted == NULL) {
-                if ((string->converted = _zip_cp437_to_utf8(string->raw, string->length, &string->converted_length, error)) == NULL)
+                // TODO: 先转为GBK，再转为UTF8.
+                int gbkLen = 0;
+                char *gbk = gb18030ToGbk((char *)string->raw, string->length, (int *)&gbkLen);
+                if (gbk == NULL) {
                     return NULL;
+                }
+                string->converted = (zip_uint8_t *)gbkToUtf8((char *)gbk, gbkLen, (int *)&string->converted_length);
+                if (string->converted == NULL) {
+                    free(gbk);
+                    return NULL;
+                }
+
+                // if ((string->converted = _zip_cp437_to_utf8(string->raw, string->length, &string->converted_length, error)) == NULL)
+                //     return NULL;
             }
             if (lenp)
                 *lenp = string->converted_length;
